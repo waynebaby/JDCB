@@ -1,0 +1,49 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="RestAPICore.RequestBase">
+    <Position X="3.5" Y="1" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAABAAIAAAAgAAAAIAAAAgAAAEAAAAAAAAAAAEAAAAA=</HashCode>
+      <FileName>RequestBase.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="RequestData" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="RestAPICore.GetRequest">
+    <Position X="6.25" Y="1.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>GetRequest.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RestAPICore.PostRequestBase">
+    <Position X="6.25" Y="3" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>PostRequestBase.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RestAPICore.PostRequest">
+    <Position X="9.5" Y="2.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>PostRequest.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RestAPICore.MultiPartPostRequest">
+    <Position X="9.5" Y="5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAEAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>MultiPartPostRequest.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RestAPICore.RequestData">
+    <Position X="3.25" Y="5.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAIAAAAAAAAgAAAAAAAAAQQAAAAI=</HashCode>
+      <FileName>RequestData.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Font Name="Microsoft YaHei" Size="9" />
+</ClassDiagram>
