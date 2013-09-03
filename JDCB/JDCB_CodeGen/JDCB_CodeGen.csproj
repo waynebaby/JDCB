@@ -1,20 +1,21 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>8.0.30703</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{1FCACD9D-7E0C-4792-B6F3-509838BEA1B3}</ProjectGuid>
+    <ProjectGuid>{FFB5E35D-9EB5-47B3-976D-5CE06CD037B5}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>RestAPICore</RootNamespace>
-    <AssemblyName>RestAPICore</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <RootNamespace>JDCB_CodeGen</RootNamespace>
+    <AssemblyName>JDCB_CodeGen</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+
+
+
     <SccProvider>SAK</SccProvider>
-    <TargetFrameworkProfile>
-    </TargetFrameworkProfile>
+    <TargetFrameworkProfile />
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
     <RestorePackages>true</RestorePackages>
   </PropertyGroup>
@@ -23,32 +24,27 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;DOTNET45</DefineConstants>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE;DOTNET45</DefineConstants>
+    <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup>
-    <SignAssembly>false</SignAssembly>
-  </PropertyGroup>
-  <PropertyGroup>
-    <AssemblyOriginatorKeyFile>RestAPIKey.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Microsoft.CompilerServices.AsyncTargetingPack.Net4">
+      <HintPath>..\packages\Microsoft.CompilerServices.AsyncTargetingPack.1.0.0\lib\net40\Microsoft.CompilerServices.AsyncTargetingPack.Net4.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Net" />
-    <Reference Include="System.Runtime.Serialization" />
-    <Reference Include="System.Web" />
+    <Reference Include="System.Json">
+      <HintPath>..\_Files\SLDllsForT4\System.Json.dll</HintPath>
+    </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -56,38 +52,18 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AuthToken.cs" />
-    <Compile Include="BasicAuthTokenFactory.cs" />
-    <Compile Include="DelegateAuthToken.cs" />
-    <Compile Include="DeleteRequest.cs" />
-    <Compile Include="ExtensionPatchs.cs" />
-    <Compile Include="IAuthTokenFactory.cs" />
-    <Compile Include="JsonContractException.cs" />
-    <Compile Include="JsonClientBase.cs" />
-    <Compile Include="JsonClientHelper.cs" />
-    <Compile Include="GetRequest.cs" />
-    <Compile Include="JsonMethod.cs" />
-    <Compile Include="JsonResponse.cs" />
-    <Compile Include="MultiPartPostRequest.cs" />
-    <Compile Include="PostRequest.cs" />
-    <Compile Include="PostRequestBase.cs" />
+    <Compile Include="SimpleXmlRequestHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="RequestBase.cs" />
-    <Compile Include="RequestCompletedEventHandler.cs" />
-    <Compile Include="RequestData.cs" />
+    <Compile Include="SimpleJsonToDataContractHelper.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="ClassDiagrams\Auths.cd" />
-    <None Include="ClassDiagrams\Responses.cd" />
-    <None Include="ClassDiagrams\Requests.cd" />
-    <None Include="RestAPIKey.snk" />
+    <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
   <PropertyGroup>
-    <PostBuildEvent>xcopy /i /s /y  $(TargetName).* $(SolutionDir)nugetproject\lib\net45</PostBuildEvent>
+    <PostBuildEvent>copy  $(TargetPath)  $(SolutionDir)_Files\</PostBuildEvent>
   </PropertyGroup>
+  <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

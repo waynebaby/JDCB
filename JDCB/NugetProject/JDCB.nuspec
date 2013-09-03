@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
+  <metadata>
+    <id>JDCB</id>
+    <version>0.9.1</version>
+    <title>Json Datacontract Builder</title>
+    <authors>WaynebabyWang  FelixFang</authors>
+    <owners>WaynebabyWang  FelixFang</owners>
+    <projectUrl>http://jdcb.codeplex.com/</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>
+      Yeah, you can access json with dynamic &amp; Json.Net.
+      But why can't we have the old static way?
+      Is there no one miss the happiness of working with intellisense?
+
+      There must be a easy way.
+
+      动态调用RestAPI返回的json, 确实很简单
+      但是你自己要封装一个SDK给别人，你好意思给人家说明书让人家看着说明书动态调用么？
+      看着动态调用里面写着驼峰命名 和你的完美API格格不入，你不觉得强迫症要发作了么？
+      为了解决这些问题，我们开了这个项目。
+      智能提示很重要。
+    </description>
+    <summary>No license at all, all free</summary>
+    <tags>Csharp,c#,Json,Datacontract,JDCB,Builder,T4,tttt,text template</tags>
+  </metadata>
+  <files>
+    <file src="tools\*.*" target="tools" />
+    <file src="content\*.*" target="content" />
+    <file src="lib\net45\*.*" target="lib\net45" />
+    <file src="lib\netcore45\*.*" target="lib\netcore45" />
+    <file src="lib\sl4-wp71\*.*" target="lib\sl4-wp71" />
+    <file src="lib\sl40\*.*" target="lib\sl40" />
+    <file src="lib\sl50\*.*" target="lib\sl50" />
+    <file src="lib\wp8\*.*" target="lib\wp8" />
+
+    
+  </files>
+</package>

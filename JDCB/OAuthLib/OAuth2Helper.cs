@@ -6,12 +6,14 @@ using System.Linq;
 
 #else
 using System.Net.Http;
+using System.Net.Http.Headers;
 #endif
 using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+
 
 
 namespace OAuthLib

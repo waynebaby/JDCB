@@ -175,7 +175,7 @@
     </PreBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
-    <PostBuildEvent>rem rem $(TargetName).* $(SolutionDir)nugetproject\lib\netcore45</PostBuildEvent>
+    <PostBuildEvent>xcopy /i /s /y  $(TargetName).* $(SolutionDir)nugetproject\lib\netcore45</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
