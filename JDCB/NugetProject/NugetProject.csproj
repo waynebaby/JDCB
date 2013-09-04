@@ -59,6 +59,15 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="NuGet.exe" />
+    <Content Include="tools\SLDllsForT4\System.Json.dll" />
+    <Content Include="tools\SLDllsForT4\System.Json.xml" />
+    <Content Include="tools\SLDllsForT4\System.Runtime.Serialization.dll" />
+    <Content Include="tools\SLDllsForT4\system.runtime.serialization.xml" />
+    <Content Include="tools\SLDllsForT4\System.ServiceModel.Web.dll" />
+    <Content Include="tools\SLDllsForT4\System.ServiceModel.Web.Xml" />
+    <Content Include="tools\SLDllsForT4\System.Xml.dll" />
+    <Content Include="tools\SLDllsForT4\System.Xml.Linq.dll" />
+    <Content Include="tools\SLDllsForT4\System.Xml.Xml" />
     <Content Include="tools\TextTemplate.ico" />
     <Content Include="tools\TextTransform.exe" />
   </ItemGroup>
