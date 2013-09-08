@@ -53,14 +53,20 @@ namespace JDCB_CodeGen
 
 
             var sb = new StringBuilder().AppendLine();
-            sb
-                .Append(Tabs()).Append("namespace ").AppendLine(ns); ;
-            sb
-                .Append(Tabs()).AppendLine("{");
-            tabRepeatCount++;
+            if (!String.IsNullOrWhiteSpace(ns))
+            {
+
+
+                sb
+                    .Append(Tabs()).Append("namespace ").AppendLine(ns); ;
+                sb
+                    .Append(Tabs()).AppendLine("{");
+                tabRepeatCount++;
+            }
+
             WriteComment(comment, sb);
             sb
-                .Append(Tabs()).Append("public class ").Append(_className).Append(" : ").Append(_baseClassName).Append(", INotifyPropertyChanged").AppendLine()
+                .Append(Tabs()).Append("public partial class ").Append(_className).Append(" : ").Append(_baseClassName).Append(", INotifyPropertyChanged").AppendLine()
                 .Append(Tabs()).AppendLine("{");
             tabRepeatCount++;
             sb
@@ -106,10 +112,14 @@ namespace JDCB_CodeGen
 
             sb
                 .Append(Tabs()).AppendLine("}");
+            if (!String.IsNullOrWhiteSpace(ns))
+            {
 
-            tabRepeatCount--;
-            sb
-                .Append(Tabs()).AppendLine("}");
+                tabRepeatCount--;
+
+                sb
+                    .Append(Tabs()).AppendLine("}");
+            }
             return sb.ToString();
         }
 

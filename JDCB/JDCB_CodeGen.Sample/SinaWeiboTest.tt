@@ -1,0 +1,605 @@
+﻿<#@ template debug="true" hostSpecific="True" #>
+<#@ output extension=".cs" #>
+<#@ assembly name="EnvDTE"#>
+<#@ Assembly Name="System.Core"#>
+<#@ Assembly Name="$(SolutionDir)packages\JDCB.0.9.5\Tools\SLDllsForT4\System.Xml.dll" #>
+<#@ Assembly Name="$(SolutionDir)packages\JDCB.0.9.5\Tools\SLDllsForT4\System.Json.dll" #>
+<#@ Assembly Name="$(SolutionDir)packages\JDCB.0.9.5\Tools\SLDllsForT4\System.ServiceModel.Web.dll" #>
+<#@ Assembly Name="$(SolutionDir)packages\JDCB.0.9.5\Tools\SLDllsForT4\System.Runtime.Serialization.dll" #>
+<#@ Assembly Name="$(SolutionDir)packages\JDCB.0.9.5\Tools\JDCB_CodeGen.dll" #>
+<#@ assembly name="System.Xml"#>
+<#@ assembly name="System.Xml.Linq"#>
+<#@ import namespace="Microsoft.VisualStudio.TextTemplating"#>
+<#@ import namespace="System" #>
+<#@ import namespace="System.IO" #>
+<#@ import namespace="System.Diagnostics" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Xml" #>
+<#@ import namespace="System.Xml.Linq" #>
+<#@ import namespace="System.Collections" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #> 
+<#@ import namespace="System.Json" #>
+<#@ import namespace="JDCB_CodeGen"#>
+<#
+string fileName=this.Host.TemplateFile;
+string clientClassName="JDCBClient";
+string folder=Path.Combine ( Path.GetDirectoryName (fileName) ,"ContractSource");
+string[] jsonfs=Directory.GetFiles(folder,"*.json", SearchOption.AllDirectories);
+string[] xmlfs=Directory.GetFiles(folder,"*.xml", SearchOption.AllDirectories);
+string baseUri="http://api.weibo.com/";
+string nameSpaceStr=Path.GetFileNameWithoutExtension(fileName);
+WriteAll(fileName,clientClassName,folder,jsonfs,xmlfs,baseUri,nameSpaceStr);
+
+#>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<#+
+
+// Manager class records the various blocks so it can split them up
+class Manager {
+	private class Block {
+		public String Name;
+		public int Start, Length;
+	}
+
+	private Block currentBlock;
+	private List<Block> files = new List<Block>();
+	private Block footer = new Block();
+	private Block header = new Block();
+	private ITextTemplatingEngineHost host;
+	private StringBuilder template;
+	protected List<String> generatedFileNames = new List<String>();
+
+	public static Manager Create(ITextTemplatingEngineHost host, StringBuilder template) {
+		return (host is IServiceProvider) ? new VSManager(host, template) : new Manager(host, template);
+	}
+
+	public void StartNewFile(String name) {
+		if (name == null)
+			throw new ArgumentNullException("name");
+		CurrentBlock = new Block { Name = name };
+	}
+
+	public void StartFooter() {
+		CurrentBlock = footer;
+	}
+
+	public void StartHeader() {
+		CurrentBlock = header;
+	}
+
+	public void EndBlock() {
+		if (CurrentBlock == null)
+			return;
+		CurrentBlock.Length = template.Length - CurrentBlock.Start;
+		if (CurrentBlock != header && CurrentBlock != footer)
+			files.Add(CurrentBlock);
+		currentBlock = null;
+	}
+
+	public virtual void Process(bool split) {
+		if (split) {
+			EndBlock();
+			String headerText = template.ToString(header.Start, header.Length);
+			String footerText = template.ToString(footer.Start, footer.Length);
+			String outputPath = Path.GetDirectoryName(host.TemplateFile);
+			files.Reverse();
+			foreach(Block block in files) {
+				String fileName = Path.Combine(outputPath, block.Name);
+				String content = headerText + template.ToString(block.Start, block.Length) + footerText;
+				generatedFileNames.Add(fileName);
+				CreateFile(fileName, content);
+				template.Remove(block.Start, block.Length);
+			}
+		}
+	}
+
+	protected virtual void CreateFile(String fileName, String content) {
+		if (IsFileContentDifferent(fileName, content))
+			File.WriteAllText(fileName, content);
+	}
+
+	public virtual String GetCustomToolNamespace(String fileName) {
+		return null;
+	}
+
+	public virtual String DefaultProjectNamespace {
+		get { return null; }
+	}
+
+	protected bool IsFileContentDifferent(String fileName, String newContent) {
+		return !(File.Exists(fileName) && File.ReadAllText(fileName) == newContent);
+	}
+
+	private Manager(ITextTemplatingEngineHost host, StringBuilder template) {
+		this.host = host;
+		this.template = template;
+	}
+
+	private Block CurrentBlock {
+		get { return currentBlock; }
+		set {
+			if (CurrentBlock != null)
+				EndBlock();
+			if (value != null)
+				value.Start = template.Length;
+			currentBlock = value;
+		}
+	}
+
+	private class VSManager: Manager {
+		private EnvDTE.ProjectItem templateProjectItem;
+		private EnvDTE.DTE dte;
+		private Action<String> checkOutAction;
+		private Action<IEnumerable<String>> projectSyncAction;
+
+		public override String DefaultProjectNamespace {
+			get {
+				return templateProjectItem.ContainingProject.Properties.Item("DefaultNamespace").Value.ToString();
+			}
+		}
+
+		public override String GetCustomToolNamespace(string fileName) {
+			return dte.Solution.FindProjectItem(fileName).Properties.Item("CustomToolNamespace").Value.ToString();
+		}
+
+		public override void Process(bool split) {
+			if (templateProjectItem.ProjectItems == null)
+				return;
+			base.Process(split);
+			projectSyncAction.EndInvoke(projectSyncAction.BeginInvoke(generatedFileNames, null, null));
+		}
+
+		protected override void CreateFile(String fileName, String content) {
+			if (IsFileContentDifferent(fileName, content)) {
+				CheckoutFileIfRequired(fileName);
+				File.WriteAllText(fileName, content);
+			}
+		}
+
+		internal VSManager(ITextTemplatingEngineHost host, StringBuilder template)
+			: base(host, template) {
+			var hostServiceProvider = (IServiceProvider) host;
+			if (hostServiceProvider == null)
+				throw new ArgumentNullException("Could not obtain IServiceProvider");
+			dte = (EnvDTE.DTE) hostServiceProvider.GetService(typeof(EnvDTE.DTE));
+			if (dte == null)
+				throw new ArgumentNullException("Could not obtain DTE from host");
+			templateProjectItem = dte.Solution.FindProjectItem(host.TemplateFile);
+			checkOutAction = (String fileName) => dte.SourceControl.CheckOutItem(fileName);
+			projectSyncAction = (IEnumerable<String> keepFileNames) => ProjectSync(templateProjectItem, keepFileNames);
+		}
+
+		private static void ProjectSync(EnvDTE.ProjectItem templateProjectItem, IEnumerable<String> keepFileNames) {
+			var keepFileNameSet = new HashSet<String>(keepFileNames);
+			var projectFiles = new Dictionary<String, EnvDTE.ProjectItem>();
+			var originalFilePrefix = Path.GetFileNameWithoutExtension(templateProjectItem.get_FileNames(0)) + ".";
+			foreach(EnvDTE.ProjectItem projectItem in templateProjectItem.ProjectItems)
+				projectFiles.Add(projectItem.get_FileNames(0), projectItem);
+
+			// Remove unused items from the project
+			foreach(var pair in projectFiles)
+				if (!keepFileNames.Contains(pair.Key) && !(Path.GetFileNameWithoutExtension(pair.Key) + ".").StartsWith(originalFilePrefix))
+					pair.Value.Delete();
+
+			// Add missing files to the project
+			foreach(String fileName in keepFileNameSet)
+				if (!projectFiles.ContainsKey(fileName))
+					templateProjectItem.ProjectItems.AddFromFile(fileName);
+		}
+
+		private void CheckoutFileIfRequired(String fileName) {
+			var sc = dte.SourceControl;
+			if (sc != null && sc.IsItemUnderSCC(fileName) && !sc.IsItemCheckedOut(fileName))
+				checkOutAction.EndInvoke(checkOutAction.BeginInvoke(fileName, null, null));
+		}
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+	
+	
+#>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<#+  
+
+public  void WriteAll(string fileName,string clientClassName, string folder,string[] jsonfs ,string[] xmlfs, string baseUri, string nameSpaceStr)
+{
+#>
+<#+ var manager = Manager.Create(Host, GenerationEnvironment); #>
+<#+ manager.StartHeader(); #>
+using System.Runtime.Serialization;
+using System;
+using RestAPICore;
+using System.Linq;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using System.Threading;
+using System.IO;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+namespace <#=nameSpaceStr#>
+{
+
+
+<#+ manager.EndBlock(); #>
+<#+   
+
+
+
+
+
+
+
+List<string> requests=
+	xmlfs
+	.Select(x=>x.Substring(folder.Length,x.Length -folder.Length -4-8))
+	.ToList();
+   // .Select(x=>new String[] {Path.GetDirectoryName(x),Path.GetFileNameWithoutExtension(x)} )
+ //   .ToDictionary(x=>x[0]+Path.DirectorySeparatorChar+x[1]);
+
+Dictionary<string,string> requestsDic=
+		xmlfs.Select
+		(
+			fs=>
+			{
+				XDocument doc=XDocument.Load(fs);
+				var value=doc.Root.Descendants().Where(e=>e.Name.LocalName=="Template").First().Attribute("url").Value ;//doc.Root.Descendants().Where(e=>e.Name.LocalName=="Template").Single().Value;
+				return new {Key=fs.Substring(folder.Length,fs.Length -folder.Length -4-8),Value=value };
+			}
+		)
+		.ToDictionary(x=>x.Key,x=>x.Value);
+	;
+		
+	
+List<string> responses=
+	jsonfs
+	.Select(x=>x.Substring(folder.Length,x.Length -folder.Length -5-9))
+	.ToList();
+  //  .Select(x=>new String[] {Path.GetDirectoryName(x),Path.GetFileNameWithoutExtension(x)} )
+	//.ToDictionary(x=>x[0]+Path.DirectorySeparatorChar+x[1]);
+
+List<string> methods=
+	requests
+	.Intersect(responses)
+	//.Select(x=>string.Concat(x.Split('\\')))
+	.ToList();
+Dictionary<string,string> comments=
+		xmlfs
+		.Select(fs=>
+			{
+				try 
+					{	        
+						XDocument doc=XDocument.Load(fs);
+						var cmx=doc.Root.Elements().First().Elements().Where(x=>x.Name.LocalName=="Comment").FirstOrDefault();
+						return new { Key=fs.Substring(folder.Length,fs.Length -folder.Length -4-8),Value= cmx.Value};
+					}
+					catch (Exception )
+					{
+						return null;
+					
+					}
+					
+			}
+		)
+		.Where(x=>x!=null)
+		.ToDictionary(x=>x.Key,x=>x.Value);
+   
+Func<string[], string> concatNames = (names) => 
+{
+	return string.Join("", names.Select(s => s.Length > 1 ? char.ToUpper(s[0]) + s.Substring(1) : s).ToArray());
+};
+
+Func<string[], string> concatNamesForNS = (names) => 
+{
+	return string.Join(".", names.Where(s=>s.Length>0).Select(s => s.Length > 1 ? char.ToUpper(s[0]) + s.Substring(1) : s).ToArray());
+};
+
+Func<string, string> convertToUpperName = (s) =>
+{
+	return s.Length > 1 ? char.ToUpper(s[0]) + s.Substring(1) : s;
+};
+
+Func<string, string> convertToLowerName = (s) =>
+{
+	return s.Length > 1 ? char.ToLower(s[0]) + s.Substring(1) : s;
+};
+	
+	
+#>
+
+
+
+	public partial class <#=clientClassName#>:JsonClientBase
+	{
+		public <#=clientClassName#>()
+		{
+			//TODO: Set BaseUri property Here 在这里指定服务基础地址
+			BaseUri = new Uri("<#=baseUri#>");
+		<#+ foreach (string key in methods) 
+		{
+			string[] names = key.Replace(".","\\").Split('\\').Select(x=>SimpleXmlRequestHelper.FixName(x)).ToArray();
+			string upperhead = concatNames(names);
+			string ns=concatNamesForNS(names);
+			string lowerhead = convertToLowerName(upperhead);
+			
+			#>
+			
+			_execute<#=upperhead#>Method= new JsonMethod<<#=ns#>Request, <#=ns#>Response>(this, new Uri("<#=requestsDic[key]#>", UriKind.Relative));
+			<#+
+		}#>
+			
+		<#+ foreach (string key in requests) 
+		{
+			 string[] names = key.Replace(".","\\").Split('\\').Select(x=>SimpleXmlRequestHelper.FixName(x)).ToArray();
+			string upperhead = concatNames(names);
+			string ns=concatNamesForNS(names);
+			string lowerhead = convertToLowerName(upperhead);
+			#>
+			
+			_request<#=upperhead#>Method= new JsonMethod<<#=ns#>Request, Stream>(this, new Uri("<#=requestsDic[key]#>", UriKind.Relative));
+			<#+
+		}#>
+		}
+		
+		<#+ foreach (string key in methods ) 
+		{
+
+			string[] names = key.Replace(".","\\")
+			
+			.Split('\\').Select(x=>SimpleXmlRequestHelper.FixName(x)).ToArray();
+			string upperhead = concatNames(names);
+			string ns=concatNamesForNS(names);
+			string lowerhead = convertToLowerName(upperhead);
+		#>
+		
+		/// <summary>
+		/// Path<#=key#>
+		/// </summary>
+		JsonMethod<<#=ns#>Request, <#=ns#>Response> _execute<#=upperhead#>Method;
+		
+		/// <summary>
+		/// This is a async execution of <#=key#> rest call. 
+		/// It returns JsonResponse&lt;<#=ns#>Response&gt;
+<#+
+			if (comments.ContainsKey(key))
+				{
+					this.WriteLine("		/// Here comes request Comments:");
+					 var col=comments[key].Split(new Char[]{'\r','\n'},StringSplitOptions.RemoveEmptyEntries )
+						.Select(s=>"\t\t///"+s);
+					foreach(string s in col)
+					{
+						this.WriteLine(s);
+					}
+					
+				}
+#>
+		/// </summary>
+		public async Task<JsonResponse<<#=ns#>Response>> Execute<#=upperhead#>Async (
+			<#=ns#>Request request,
+			CancellationToken cancellationToken =default(CancellationToken),
+			IProgress<ProgressReport> progress=null 
+			)			
+		{
+			return await _execute<#=upperhead#>Method.GetResponseAsync(request, cancellationToken, progress);
+		}
+		
+		/// <summary>
+		/// This is a sync execution of <#=key#> rest call. 
+		/// It returns JsonResponse&lt;<#=ns#>Response&gt;
+<#+
+			if (comments.ContainsKey(key))
+				{
+					this.WriteLine("		/// Here comes request Comments:");
+					 var col=comments[key].Split(new Char[]{'\r','\n'},StringSplitOptions.RemoveEmptyEntries )
+						.Select(s=>"\t\t///"+s);
+					foreach(string s in col)
+					{
+						this.WriteLine(s);
+					}
+					
+				}
+#>
+		/// </summary>
+		public JsonResponse<<#=ns#>Response> Execute<#=upperhead#>(<#=ns#>Request request)
+		{
+			return Execute<#=upperhead#>Async(request).Result;
+		}
+		
+		
+		<#+}#>
+		<#+ foreach (string key in requests ) 
+		{
+			string[] names = key.Replace(".","\\").Split('\\').Select(x=>SimpleXmlRequestHelper.FixName(x)).ToArray();
+			string upperhead = concatNames(names);
+			string ns=concatNamesForNS(names);
+			string lowerhead = convertToLowerName(upperhead);
+		#>
+		
+		JsonMethod<<#=ns#>Request, Stream> _request<#=upperhead#>Method;
+		/// <summary>
+		/// This is a async request of <#=key#> rest call. 
+		///It returns JsonResponse&lt;Stream&gt;
+<#+
+			if (comments.ContainsKey(key))
+				{
+					this.WriteLine("		/// Here comes request Comments:");
+					 var col=comments[key].Split(new Char[]{'\r','\n'},StringSplitOptions.RemoveEmptyEntries )
+						.Select(s=>"\t\t///"+s);
+					foreach(string s in col)
+					{
+						this.WriteLine(s);
+					}
+					
+				}
+#>
+		/// </summary>
+		public async Task<JsonResponse<Stream>> Request<#=upperhead#>Async (
+			<#=ns#>Request request,
+			CancellationToken cancellationToken =default(CancellationToken),
+			IProgress<ProgressReport> progress=null 
+			)			
+		{
+			return await _request<#=upperhead#>Method.GetResponseAsync(request, cancellationToken, progress);
+		}
+		/// <summary>
+		/// This is a sync request of <#=key#> rest call.
+		///It returns JsonResponse&lt;Stream&gt;
+<#+
+			if (comments.ContainsKey(key))
+				{
+					this.WriteLine("		/// Here comes request Comments:");
+					 var col=comments[key].Split(new Char[]{'\r','\n'},StringSplitOptions.RemoveEmptyEntries )
+						.Select(s=>"\t\t///"+s);
+					foreach(string s in col)
+					{
+						this.WriteLine(s);
+					}
+					
+				}
+#>
+		/// </summary>
+		public JsonResponse<Stream> Request<#=upperhead#>(<#=ns#>Request request)
+		{
+			return Request<#=upperhead#>Async(request).Result;
+		}
+		
+		<#+}#>
+		
+	}
+
+<#+ manager.StartFooter(); #>
+}
+<#+ manager.EndBlock(); #>
+
+<#+ manager.StartNewFile("ResponseContracts.generated.cs"); #>
+
+	
+<#+		
+		  
+jsonfs.ToList()
+.ForEach(
+	file=>
+	{
+		using(var fileStream=File.OpenRead(file))
+			{
+			var seq=file.Substring(folder.Length+1,file.Length -5 -folder.Length)
+					
+					.Replace(".","\\")
+					.Split('\\')
+					.Select(x=>SimpleXmlRequestHelper.FixName(x))
+					.Where(x=>x.Length>0)
+					.ToList();
+			var ns=String.Join(".",seq.Take(seq.Count -2));
+			var classname=	String.Join("",seq.ToArray().Reverse().Take(2).Reverse()); 
+				
+				#>
+				//ns<#=ns#>
+<#=(new SimpleJsonToDataContractHelper()).GetDataContract(fileStream,classname,ns) #>
+				
+<#+
+			}
+	}
+);
+
+
+
+
+	
+#>
+<#+ manager.EndBlock(); #>
+<#+ manager.StartNewFile("RequestContracts.generated.cs"); #>
+
+<#+
+
+
+xmlfs.ToList()
+.ForEach(
+	file=>
+	{
+	var seq=file.Substring(folder.Length+1,file.Length -5 -folder.Length)
+					.Replace(".","\\")
+					.Split('\\')
+					.Select(x=>SimpleXmlRequestHelper.FixName(x)).ToList();
+			var classname=string.Join ("",seq.Skip(seq.Count-2).Take(2));
+				
+				seq.RemoveAt(seq.Count-1);
+		var ns= string.Join (".",seq.Take(seq.Count-1));
+
+				#>
+				
+<#= 	(new  SimpleXmlRequestHelper()).GetRequestContractsCode(file,classname,ns) #>
+				
+				<#+
+			
+	}
+);
+
+#>	
+
+<#+ manager.EndBlock(); #>
+
+
+
+<#+ manager.Process(true); #>
+
+ <#+
+ }
+	
+#>

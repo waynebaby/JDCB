@@ -31,6 +31,9 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OAuthLib_wp8", "OAuthLib_wp8\OAuthLib_wp8.csproj", "{70F8B2E3-6772-4418-AAE4-CA546BAAE3C3}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NugetProject", "NugetProject\NugetProject.csproj", "{7DC3F629-F48E-4543-8454-44A65229B441}"
+	ProjectSection(ProjectDependencies) = postProject
+		{FFB5E35D-9EB5-47B3-976D-5CE06CD037B5} = {FFB5E35D-9EB5-47B3-976D-5CE06CD037B5}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JDCB_CodeGen", "JDCB_CodeGen\JDCB_CodeGen.csproj", "{FFB5E35D-9EB5-47B3-976D-5CE06CD037B5}"
 EndProject

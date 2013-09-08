@@ -1,8 +1,6 @@
 @echo off
 
-:: Set repository info
-set key=2491e194-b04f-4998-9816-187504f18927
-set url=https://github.com/waynebaby/Table-Game-Sidekick
+
 
 :: Make sure the nuget executable is writable
 attrib -R NuGet.exe

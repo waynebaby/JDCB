@@ -31,36 +31,41 @@ namespace JDCB_CodeGen
         {
             return new string('\t', tabRepeatCount);
         }
-        public string GetDataContract(Stream jsonStream, string classHeader , string namespaceString)
+        public string GetDataContract(Stream jsonStream, string classHeader , string ns)
         {
 
             var value = System.Json.JsonObject.Load(jsonStream);
             var sb = new StringBuilder();
+            if (!String.IsNullOrWhiteSpace(ns))
+            {
+                sb
+                .Append(Tabs())
+                .Append("namespace ")
+                .Append(ns)
+                .AppendLine();
+                sb
+                  .Append(Tabs())
+                  .AppendLine("{")
+                  .AppendLine();
 
-            sb
-            .Append(Tabs())
-            .Append("namespace ")
-            .Append(namespaceString)
-            .AppendLine();
-            sb
-              .Append(Tabs())
-              .AppendLine("{")
-              .AppendLine();
-            tabRepeatCount++;
-
+                tabRepeatCount++;
+            }
             var lst = VisitJsonValue("", value, sb, classHeader).ToList();
 
             foreach (var item in lst)
             {
                 DefineObject(item.PropertyName, item.JValue, item.StringBuilder, item.ClassHeader);
             }
-            tabRepeatCount--;
 
-            sb
-             .Append(Tabs())
-             .AppendLine("}")
-             .AppendLine();
+            if (!String.IsNullOrWhiteSpace(ns))
+            {
+                tabRepeatCount--;
 
+                sb
+                 .Append(Tabs())
+                 .AppendLine("}")
+                 .AppendLine();
+            }
             return sb.ToString();
         }
         Dictionary<JsonType, string> typedic
@@ -208,10 +213,10 @@ namespace JDCB_CodeGen
             {
                 sb
                     .Append(Tabs()).Append("[DataContract]").AppendLine();
-
+                
             }
             sb
-                .Append(Tabs()).Append("public class ").Append(FixName(typeName)).Append(isCollection ? "" : ": INotifyPropertyChanged").AppendLine(); ;
+                .Append(Tabs()).Append("public partial class ").Append(FixName(typeName)).Append(isCollection ? "" : ": INotifyPropertyChanged").AppendLine(); ;
             sb
                 .Append(Tabs()).Append("{").AppendLine();
 
@@ -275,3 +280,5 @@ namespace JDCB_CodeGen
         }
     }
 }
+
+ 
